@@ -73,13 +73,18 @@ def scroll(page):
     return page
 
 def extract_transcript(link):
-    parsed_link = urlparse(link)
-    video_id = parse_qs(parsed_link.query).get('v', [None])[0]
-    ytt_api = YouTubeTranscriptApi()
-    transcript_fetch = ytt_api.fetch(video_id, languages=['hi'])
-    full_transcript = [snippet.text for snippet in transcript_fetch]
-    full_transcript = ' '.join(full_transcript)
-    return full_transcript
+    parsed_url = urlparse(link)
+    video_id = parse_qs(parsed_url.query).get('v', [None])[0] 
+    if not video_id:
+        return None      
+    try:
+        ytt_api = YouTubeTranscriptApi()
+        transcript_fetch = ytt_api.fetch(video_id, languages=['hi'])
+        transcript_text = [segment['text'] for segment in transcript_fetch]
+        return ' '.join(transcript_text)
+    except Exception as e:
+        print(f"Error fetching transcript for {video_id}: {e}")
+        return None
     
 def scrape_youtube_channel(url):
     """
@@ -90,6 +95,11 @@ def scrape_youtube_channel(url):
     """
     SLEEP_TIME_FOR_CHANNEL_PAGE = 4
     SLEEP_TIME_FOR_VIDEO_PAGE = 2
+    
+    result = {
+        "user": [],
+        "videos": []
+    }   
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=False)
         page = browser.new_page()
@@ -97,7 +107,7 @@ def scrape_youtube_channel(url):
         page.locator('button.truncated-text-wiz__absolute-button').click()
         time.sleep(SLEEP_TIME_FOR_CHANNEL_PAGE)
         channel_data = extract_yt_channel_info(page.content())
-        print(channel_data)
+        result["user"].append(channel_data)   
         page.locator('div#visibility-button').click()
 
         page = scroll(page)
@@ -113,13 +123,15 @@ def scrape_youtube_channel(url):
             video_data['link'] = link
             video_data['transcript_language'] = 'hi'
             video_data['transcript'] = extract_transcript(link)
-            print(video_data)
+            result['videos'].append(video_data)
+    return result
 
 def main():
     url = 'https://www.youtube.com/@SenateofPakistanOfficial/streams'
     data = scrape_youtube_channel(url)
-    # print(json.dumps(data, indent=2))
-
+    print(json.dumps(data, indent=2))
+    with open('youtube_data.json', 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
 
 if __name__ == "__main__":
     main()
