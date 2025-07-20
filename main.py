@@ -1,8 +1,9 @@
 import json
 import time
+from urllib.parse import urljoin, urlparse, parse_qs
+
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin, urlparse, parse_qs
 from youtube_transcript_api import YouTubeTranscriptApi
 
 def extract_yt_channel_info(html):
