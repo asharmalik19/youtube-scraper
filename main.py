@@ -125,6 +125,8 @@ def scrape_youtube_channel(url):
             video_data['transcript_language'] = 'hi'
             video_data['transcript'] = extract_transcript(link)
             result['videos'].append(video_data)
+            
+        browser.close()
     return result
 
 def main():
