@@ -2,7 +2,8 @@ import json
 import time
 from playwright.sync_api import sync_playwright
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse, parse_qs
+from youtube_transcript_api import YouTubeTranscriptApi
 
 def extract_yt_channel_info(html):
     soup = BeautifulSoup(html, 'html.parser')
@@ -70,6 +71,15 @@ def scroll(page):
         previous_count = new_count
         scroll_count += 1
     return page
+
+def extract_transcript(link):
+    parsed_link = urlparse(link)
+    video_id = parse_qs(parsed_link.query).get('v', [None])[0]
+    ytt_api = YouTubeTranscriptApi()
+    transcript_fetch = ytt_api.fetch(video_id, languages=['hi'])
+    full_transcript = [snippet.text for snippet in transcript_fetch]
+    full_transcript = ' '.join(full_transcript)
+    return full_transcript
     
 def scrape_youtube_channel(url):
     """
@@ -101,6 +111,8 @@ def scrape_youtube_channel(url):
             time.sleep(SLEEP_TIME_FOR_VIDEO_PAGE)
             video_data = extract_yt_video_info(page.content())
             video_data['link'] = link
+            video_data['transcript_language'] = 'hi'
+            video_data['transcript'] = extract_transcript(link)
             print(video_data)
 
 def main():
