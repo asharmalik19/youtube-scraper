@@ -23,6 +23,11 @@ git clone https://github.com/asharmalik19/youtube-scraper
 uv sync
 ```
 
+4. Install chromium if you don't have already
+```bash
+uv playwright install chromium
+```
+
 ## Usage
 
 ### Direct Usage
@@ -34,7 +39,7 @@ url = 'https://www.youtube.com/@YourChannelName/streams'
 
 2. Run the script:
 ```bash
-python main.py
+uv run main.py
 ```
 
 3. Data will be saved to `youtube_data.json`
